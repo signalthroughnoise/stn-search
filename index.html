@@ -115,6 +115,10 @@
   .finalQuery b{color:var(--text); font-weight:normal;}
   .syncNote{font-size:11.5px; color:var(--dim); margin-top:6px;}
   body.in-premiere .popupHint, body.in-premiere .popupBlockedMsg{display:none !important;}
+  /* Inside the AE Helper panel: the panel supplies its own header. */
+  body.embedded{padding:4px 12px 32px;}
+  body.embedded .wrap > .brandRow, body.embedded .wrap > .subtitle{display:none;}
+  body.embedded .tabs{margin-top:4px;}
   @media (max-width:600px){
     body{padding:20px 16px 48px;}
     .row > div{min-width:0; flex:1 1 100% !important;}
@@ -152,23 +156,42 @@
    browser it uses window.open with a stable per-platform tab name so repeat
    searches reuse the same tab (see tabName notes below). */
 const IN_PREMIERE = !!(window.__adobe_cep__ && window.cep && window.cep.util && window.cep.util.openURLInDefaultBrowser);
-if(IN_PREMIERE) document.body.classList.add('in-premiere');
+
+/* Embedded in the AE Helper panel: the panel shows this page in a frame. The
+   frame can't reach CEP directly, so links are handed to the panel with
+   postMessage ("stn-open") and the panel opens them in the default browser.
+   The panel announces itself with "stn-host" once it sees our "stn-ready". */
+const FRAMED = window.parent !== window;
+let HOST_BRIDGE = false;
+if(FRAMED) document.body.classList.add('embedded');
+
+function markPremiere(){ document.body.classList.add('in-premiere'); }
+if(IN_PREMIERE) markPremiere();
+
+if(FRAMED){
+  window.addEventListener('message', ev => {
+    if(ev.source !== window.parent || !ev.data || ev.data.type !== 'stn-host') return;
+    HOST_BRIDGE = true;
+    markPremiere();
+  });
+  window.parent.postMessage({type:'stn-ready'}, '*');
+}
 
 function openExternal(url, name){
   if(IN_PREMIERE){ window.cep.util.openURLInDefaultBrowser(url); return true; }
+  if(HOST_BRIDGE){ window.parent.postMessage({type:'stn-open', url}, '*'); return true; }
   return window.open(url, name);
 }
 
-if(IN_PREMIERE){
-  document.addEventListener('click', ev => {
-    const a = ev.target.closest('a[href]');
-    if(!a) return;
-    const href = a.getAttribute('href');
-    if(!href || href === '#') return;
-    ev.preventDefault();
-    openExternal(href);
-  });
-}
+document.addEventListener('click', ev => {
+  if(!IN_PREMIERE && !HOST_BRIDGE) return;
+  const a = ev.target.closest('a[href]');
+  if(!a) return;
+  const href = a.getAttribute('href');
+  if(!href || href === '#') return;
+  ev.preventDefault();
+  openExternal(href);
+});
 
 function esc(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -920,7 +943,7 @@ window.addEventListener('hashchange', () => showTool(location.hash.slice(1), tru
    The service worker lets the hosted version be installed as its own app
    window and keep working offline. Skipped when opened as a local file or
    inside the Premiere panel. */
-if('serviceWorker' in navigator && location.protocol.startsWith('http') && !IN_PREMIERE){
+if('serviceWorker' in navigator && location.protocol.startsWith('http') && !IN_PREMIERE && !FRAMED){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   });

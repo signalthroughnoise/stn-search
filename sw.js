@@ -1,7 +1,7 @@
 // STN Search Suite service worker.
 // Network-first for the app itself, so updates show up as soon as they're
 // published; falls back to the cached copy when offline.
-const CACHE = 'stn-suite-v1';
+const CACHE = 'stn-suite-v2';
 const APP_FILES = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', e => {
