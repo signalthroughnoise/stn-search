@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STN Search Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#18151c">
+<meta name="description" content="Signal Through Noise search suite: music, stock footage and template search in one place.">
+<meta name="robots" content="noindex, nofollow">
+<style>
+  :root{
+    --bg:#18151c; --panel:#221d28; --panel2:#2b2531; --border:#40384a;
+    --text:#f4eee6; --dim:#ad9fb5; --accent:#e8935a; --accent2:#7bacdd;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Nunito', Arial, Helvetica, sans-serif; background:var(--bg); color:var(--text);
+    padding:32px 24px 60px;
+  }
+  .wrap{max-width:980px; margin:0 auto;}
+  .brandRow{display:flex; align-items:center; gap:14px; margin-bottom:4px;}
+  .brandRow img{height:34px; width:34px; border-radius:8px; flex-shrink:0;}
+  .brandRow .dash{color:var(--dim); font-size:20px; font-weight:400;}
+  h1{font-size:23px; margin:0; font-weight:800;}
+  .subtitle{color:var(--dim); font-size:14px; margin:0 0 22px;}
+
+  /* Tabs */
+  .tabs{display:flex; gap:8px; margin:18px 0 22px; flex-wrap:wrap; border-bottom:1px solid var(--border); padding-bottom:12px;}
+  .tab{
+    background:transparent; border:1px solid var(--border); color:var(--dim);
+    border-radius:12px; padding:9px 16px; font-family:inherit; font-size:14px; font-weight:700;
+    cursor:pointer; display:flex; flex-direction:column; align-items:flex-start; gap:1px; line-height:1.2;
+    transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .tab small{font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; opacity:.8;}
+  .tab:hover{color:var(--text); border-color:var(--dim);}
+  .tab[aria-selected="true"]{background:var(--panel2); color:var(--text); border-color:var(--accent);}
+  .tool[hidden]{display:none;}
+
+  .panel{
+    background:var(--panel); border:1px solid var(--border); border-radius:16px;
+    padding:24px; margin-bottom:20px; box-shadow:0 3px 16px rgba(0,0,0,.22);
+  }
+  label{display:block; font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:var(--dim); margin-bottom:6px; font-weight:700;}
+  select, textarea, input[type=text]{
+    width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:10px; padding:10px 12px; font-size:14px; font-family:inherit;
+  }
+  textarea{min-height:64px; resize:vertical;}
+  .row{display:flex; gap:16px; flex-wrap:wrap;}
+  .row > div{flex:1; min-width:240px;}
+  .tags{margin-top:10px; font-size:12.5px; color:var(--dim); line-height:1.5;}
+  .tags b{color:var(--text);}
+  .divider{
+    display:flex; align-items:center; gap:12px; color:var(--dim); font-size:12px;
+    margin:18px 0; text-transform:uppercase; letter-spacing:.05em; font-weight:700;
+  }
+  .divider::before, .divider::after{content:""; flex:1; height:1px; background:var(--border);}
+  .platforms{display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:14px;}
+  .card{
+    background:var(--panel2); border:1px solid var(--border); border-radius:14px;
+    padding:18px; display:flex; flex-direction:column; gap:10px; box-shadow:0 2px 10px rgba(0,0,0,.18);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover{transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,0,0,.28);}
+  .card h3{margin:0; font-size:15px; font-weight:700;}
+  .card p{margin:0; font-size:12.5px; color:var(--dim); line-height:1.5; flex:1;}
+  .card a{
+    display:inline-block; text-align:center; background:var(--accent); color:#fff;
+    text-decoration:none; padding:10px 14px; border-radius:10px; font-size:13.5px; font-weight:700;
+    transition:opacity .15s ease, transform .15s ease;
+  }
+  .card a:hover{opacity:.9; transform:translateY(-1px);}
+  .card a.secondary{background:transparent; color:var(--accent2); border:1px solid var(--accent2);}
+  a.disabled{opacity:.4; pointer-events:none;}
+  .note{
+    font-size:12px; color:var(--dim); background:var(--panel2); border:1px solid var(--border);
+    border-radius:12px; padding:12px 14px; margin-top:6px;
+  }
+  .footer{font-size:11.5px; color:var(--dim); margin-top:28px; text-align:center;}
+  .badge{
+    display:inline-block; font-size:10.5px; padding:2px 9px; border-radius:20px;
+    background:rgba(123,172,221,.16); color:var(--accent2); margin-left:6px; vertical-align:middle;
+  }
+  .badge.commercial{background:rgba(232,147,90,.18); color:var(--accent);}
+  .searchAllRow{display:flex; justify-content:flex-end; margin-bottom:14px;}
+  .searchAllBtn, .accent2Btn{
+    background:var(--accent2); color:#fff; border:none; border-radius:10px;
+    padding:11px 18px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
+    text-decoration:none; display:inline-block;
+    transition:opacity .15s ease, transform .15s ease;
+  }
+  .searchAllBtn:hover, .accent2Btn:hover{opacity:.9; transform:translateY(-1px);}
+  .searchAllBtn:disabled{opacity:.35; cursor:not-allowed; transform:none;}
+  .popupHint{font-size:12.5px; color:var(--dim); text-align:right; margin:6px 2px 14px;}
+  .popupBlockedMsg{
+    font-size:12.5px; color:#fff; background:rgba(232,147,90,.25); border:1px solid var(--accent);
+    border-radius:10px; padding:8px 12px; text-align:right; margin:6px 2px 0; display:none;
+  }
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    background:var(--panel2); border:1px solid var(--border); color:var(--dim);
+    border-radius:20px; padding:7px 15px; font-size:12.5px; cursor:pointer; user-select:none;
+    font-family:inherit; transition:background .15s ease, transform .1s ease;
+  }
+  .chip:hover{transform:translateY(-1px);}
+  .chip.active{background:var(--accent2); border-color:var(--accent2); color:#fff;}
+  .finalQuery{font-size:12.5px; color:var(--dim); margin-top:10px; line-height:1.5;}
+  .finalQuery b{color:var(--text); font-weight:normal;}
+  .syncNote{font-size:11.5px; color:var(--dim); margin-top:6px;}
+  body.in-premiere .popupHint, body.in-premiere .popupBlockedMsg{display:none !important;}
+  @media (max-width:600px){
+    body{padding:20px 16px 48px;}
+    .row > div{min-width:0; flex:1 1 100% !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brandRow">
+    <img src="data:image/png;base64,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" alt="Signal Through Noise">
+    <span class="dash">—</span>
+    <h1>Search Suite</h1>
+  </div>
+  <p class="subtitle">Music, stock footage and templates in one place. Pick a mood or type your own prompt, then click straight through to a pre-filled search on each platform.</p>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div id="tools"></div>
+</div>
+
+<script>
+/* ===========================================================================
+   STN Search Suite — Cue Sheet (music) + Second Unit (stock footage) +
+   Take One (templates), merged into one page.
+
+   Everything here builds deep links into each platform's own search. Nothing
+   is scraped, no API keys, no backend. The platform-specific tuning below
+   (single keywords, tag facets, duration filters, etc.) is carried over
+   exactly from the three original tools, including their live-test notes.
+   ========================================================================= */
+
+/* ---------- Runtime: browser vs. Premiere (CEP panel) ---------------------
+   In a CEP panel, window.open / target links don't reliably reach the user's
+   real browser, so every outbound link goes through openExternal(), which
+   uses CEP's openURLInDefaultBrowser when it's available. In a normal
+   browser it uses window.open with a stable per-platform tab name so repeat
+   searches reuse the same tab (see tabName notes below). */
+const IN_PREMIERE = !!(window.__adobe_cep__ && window.cep && window.cep.util && window.cep.util.openURLInDefaultBrowser);
+if(IN_PREMIERE) document.body.classList.add('in-premiere');
+
+function openExternal(url, name){
+  if(IN_PREMIERE){ window.cep.util.openURLInDefaultBrowser(url); return true; }
+  return window.open(url, name);
+}
+
+if(IN_PREMIERE){
+  document.addEventListener('click', ev => {
+    const a = ev.target.closest('a[href]');
+    if(!a) return;
+    const href = a.getAttribute('href');
+    if(!href || href === '#') return;
+    ev.preventDefault();
+    openExternal(href);
+  });
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------- Text helpers ----------------------------------------------------
+   The original tools used slightly different stopword lists and word
+   splitting (music only splits on "-", footage/templates split on "-" and
+   "/" and also drop "at"/"by"). Kept separate so every generated URL is
+   identical to the originals. */
+const BASE_STOPWORDS = ["a","an","and","the","or","with","of","to","in","on","not","but","yet","for","is","as"];
+
+function makeText(stopList, splitRe){
+  const SW = new Set(stopList);
+  const keep = w => w && !SW.has(w.toLowerCase());
+  const clean = s => s.trim().replace(splitRe, " ");
+  const meaningfulWords = q => clean(q.split(",")[0]).split(/\s+/).filter(keep);
+  return {
+    meaningfulWords,
+    singleKeyword: q => meaningfulWords(q)[0] || "",
+    allMeaningfulWords: q => q.split(",").flatMap(chunk => clean(chunk).split(/\s+/).filter(keep)),
+    moodPhrase: q => q.split(",").map(chunk => clean(chunk).split(/\s+/).filter(keep).join(" ")).filter(Boolean).join(", "),
+    firstWordOf: t => clean(t).split(/\s+/).filter(keep)[0] || ""
+  };
+}
+
+const musicText = makeText(BASE_STOPWORDS, /-/g);
+const footageText = makeText([...BASE_STOPWORDS, "at", "by"], /[-/]/g);
+const templateText = makeText([...BASE_STOPWORDS, "at", "by"], /[-/]/g);
+
+/* ---------- Shared emotion library -----------------------------------------
+   One list, matching the folder structure of the Music Master library.
+   Each emotion carries a music prompt set and a footage prompt set.
+
+   Music fields:
+   amGenre = Audiomachine's "Genre" facet value (fixed list, confirmed live:
+   Action, Adventure, Comedy, Documentary, Drama, Dramedy, Fantasy, Holiday,
+   Horror, Romance, Suspense & Thriller).
+   mtMood = Megatrax's "Moods" facet value (fixed list, confirmed live:
+   Atmospheric, Comical/Humorous, Dramatic, Emotional, Energetic, Laid
+   Back/Relaxed, Positive/Optimistic, Power/Prestige, Romantic/Sexy).
+   Both get stacked onto the keyword search as extra exact-match tag filters
+   (not free text), which is what makes it possible to narrow these two
+   platforms without hitting their all-words-must-match wall.
+
+   libKeyword = the single word actually sent as the free-text q= for
+   Audiomachine/Megatrax. A fixed, live-verified word per emotion, so results
+   don't depend on which prompt style is selected (the first word of a
+   natural-language sentence is often a throwaway adjective like "Heavier,"
+   "Smoky," "Quiet" that returns zero). Confirmed live on both platforms
+   (tracks returned, Audiomachine / Megatrax): epic 764/1283, chase 43/206,
+   suspense 988/2215, contemplative 27/245, horror 574/485, dread 7/25,
+   whimsical 76/84, confident 12/1755, epic 249/1283, hope 156/992, longing
+   9/152, seductive 7/138, tender 24/189, melancholy 70/113, grief 5/5.
+   ("sultry" and "anguish" returned zero on Audiomachine and were swapped
+   for "seductive" and "grief".) */
+const EMOTIONS = [
+  {main:"Conflict / Struggle", sub:"Epic Battle – War, Strife",
+   music:{core:"Massive war epic, dark and heroic, driving aggressive tempo, thunderous and larger-than-life, blockbuster trailer scale",
+          tags:"epic, battle, war, dark heroic, thunderous, high energy, blockbuster",
+          amGenre:"Action", mtMood:"Power/Prestige", libKeyword:"epic"},
+   footage:{core:"Sweeping wide shot of armies clashing, dust and smoke filling the air, desaturated tones, chaotic hand-to-hand combat, slow motion impacts on a war-torn battlefield",
+          tags:"epic battle, war, armies clashing, chaos, dust, slow motion combat"}},
+  {main:"Conflict / Struggle", sub:"Heated Competition – Race, Chase, Fight",
+   music:{core:"Aggressive chase and fight cue, driving and distorted, relentless mid-to-uptempo drive, high intensity action",
+          tags:"chase, fight, driving, distorted, relentless, high energy, action",
+          amGenre:"Action", mtMood:"Energetic", libKeyword:"chase"},
+   footage:{core:"Intense chase through city streets, close quarters fistfight, quick handheld cuts, sweat and adrenaline, photo finish at a race, gritty action",
+          tags:"chase, fight, adrenaline, race, competition, gritty action"}},
+  {main:"Conflict / Struggle", sub:"Suspense / Tension",
+   music:{core:"Slow-building minimal suspense bed, sparse and dark, reveal-oriented tension, true-crime thriller tone",
+          tags:"suspense, tension, minimal, dark, sparse, thriller, slow build",
+          amGenre:"Suspense & Thriller", mtMood:"Dramatic", libKeyword:"suspense"},
+   footage:{core:"Dark hallway with flickering lights, close-up on nervous eyes, slow dolly push-in, shadowy figure lurking just out of frame, tense stand-off",
+          tags:"suspense, tension, dark hallway, shadow, thriller, nervous"}},
+  {main:"Contemplative", sub:"(no sub-split)",
+   music:{core:"Quiet reflection, slow warm-but-melancholic tone, introspective and unresolved",
+          tags:"contemplative, reflective, slow, introspective",
+          amGenre:"Drama", mtMood:"Atmospheric", libKeyword:"contemplative"},
+   footage:{core:"Person gazing out a rain-streaked window, quiet solitary walk in nature, slow motion clouds drifting overhead, empty room bathed in soft light",
+          tags:"contemplative, solitude, quiet reflection, rain on window, stillness"}},
+  {main:"Fear", sub:"Horror / Terror, Alarm, Panic",
+   music:{core:"Visceral horror cue, grinding and screeching textures, mechanical and attack-oriented, slasher/creature-feature intensity",
+          tags:"horror, terror, screeching, mechanical, attack, panic, aggressive",
+          amGenre:"Horror", mtMood:"Dramatic", libKeyword:"horror"},
+   footage:{core:"Dark abandoned house corridor, jump-scare silhouette in a doorway, panicked figure running through fog, flickering lights, blood-red practical lighting",
+          tags:"horror, terror, abandoned house, jump scare, panic, screaming"}},
+  {main:"Fear", sub:"Nervousness / Anxiety, Uneasiness",
+   music:{core:"Creeping psychological dread, dark with a distorted heartbeat or throb texture, sparse and unsettling, nursery-rhyme unease, not jump-scare",
+          tags:"dread, anxiety, unease, dark, distorted throb, psychological horror, sparse",
+          amGenre:"Suspense & Thriller", mtMood:"Dramatic", libKeyword:"dread"},
+   footage:{core:"Trembling hands in close-up, sweat on a nervous brow, single light bulb swinging in an empty room, ominous shadow creeping slowly across a wall",
+          tags:"anxiety, nervous, trembling hands, dim light, uneasy"}},
+  {main:"Happiness", sub:"Cheerfulness / Whimsy",
+   music:{core:"Light bouncy whimsy, playful and childlike, comedic, moderate skipping tempo",
+          tags:"whimsical, playful, comedic, light, upbeat, bouncy",
+          amGenre:"Comedy", mtMood:"Comical/Humorous", libKeyword:"whimsical"},
+   footage:{core:"Children laughing and playing, colorful confetti falling in slow motion, playful skipping through a sunny park, bright pastel colors, bubbles floating",
+          tags:"whimsical, playful, children laughing, colorful, carefree"}},
+  {main:"Happiness", sub:"Confidence / Exhilaration, Zest, Zeal, Thrill",
+   music:{core:"Confident driving trailer-song energy, anthemic build, bold and propulsive, sports-montage intensity",
+          tags:"confident, driving, anthemic, thrill, propulsive, bold",
+          amGenre:"Action", mtMood:"Energetic", libKeyword:"confident"},
+   footage:{core:"Athlete crossing the finish line arms raised, extreme sports adrenaline shot, fist pump celebration, high-five between friends, energetic cheering crowd",
+          tags:"confident, exhilaration, finish line, celebration, thrill, adrenaline"}},
+  {main:"Happiness", sub:"Enthrallment / Wonder, Rapture, Triumph, Astonishment",
+   music:{core:"Soaring blockbuster-trailer climax, building and expansive, modern and hypnotic, huge triumphant emotional payoff",
+          tags:"epic uplifting, triumphant, soaring, hypnotic, huge payoff, cinematic climax",
+          amGenre:"Adventure", mtMood:"Power/Prestige", libKeyword:"epic"},
+   footage:{core:"Awe-struck face looking up at fireworks, sweeping aerial shot of a mountain vista, golden hour lens flare, crowd erupting in triumphant celebration",
+          tags:"wonder, awe, fireworks, triumph, epic vista, astonishment"}},
+  {main:"Happiness", sub:"Optimism / Eagerness, Hope",
+   music:{core:"Swelling hope-anthem building steadily, aspirational and warm uplift, not yet full triumph",
+          tags:"hope, optimism, aspirational, warm, building",
+          amGenre:"Drama", mtMood:"Positive/Optimistic", libKeyword:"hope"},
+   footage:{core:"Sunrise over an open field, person looking toward the horizon with a hopeful expression, seedling growing in time-lapse, open road ahead, warm golden light",
+          tags:"optimism, hope, sunrise, horizon, new beginning, eager"}},
+  {main:"Love", sub:"Longing",
+   music:{core:"Wistful tone, slow and aching, unresolved emotional absence, intimate and sparse",
+          tags:"longing, yearning, wistful, sparse, intimate, slow, aching",
+          amGenre:"Romance", mtMood:"Emotional", libKeyword:"longing"},
+   footage:{core:"Empty side of the bed at dawn, person staring at an old photograph, silhouette watching a departing train, wistful gaze out a window, faded love letters",
+          tags:"longing, yearning, empty bed, old photograph, wistful, alone"}},
+  {main:"Love", sub:"Lust / Arousal, Desire, Passion",
+   music:{core:"Smoky groove, slow-burning and sultry atmosphere, noir seduction tone, sensual and sparse",
+          tags:"sultry, sensual, noir, slow burn",
+          amGenre:"Romance", mtMood:"Romantic/Sexy", libKeyword:"seductive"},
+   footage:{core:"Slow motion close-up of intertwined hands, candlelit room, sultry silhouette against a window, intimate embrace in soft shadow, smoky bar atmosphere",
+          tags:"sultry, desire, intimate, candlelight, passion, sensual"}},
+  {main:"Love", sub:"Monogamous Love / Romance, Fondness, Tenderness, Affection",
+   music:{core:"Warm and sincere, gentle mid-tempo, intimate and sentimental",
+          tags:"tender, romantic, gentle, intimate, mid-tempo, sentimental",
+          amGenre:"Romance", mtMood:"Romantic/Sexy", libKeyword:"tender"},
+   footage:{core:"Couple walking hand in hand on the beach at sunset, gentle forehead kiss, cozy embrace by the fireplace, laughing together over dinner, warm domestic tenderness",
+          tags:"romantic, tender, couple, affection, warm embrace, love"}},
+  {main:"Sadness", sub:"Melancholy / Depression, Alienation, Isolation",
+   music:{core:"Quiet hushed minor-key sadness, resigned and downbeat, sparse and understated grief, sad tone",
+          tags:"melancholy, resigned, minor key, understated, hushed, sad, sparse",
+          amGenre:"Drama", mtMood:"Emotional", libKeyword:"melancholy"},
+   footage:{core:"Person sitting alone in an empty room, rain running down a window, grey overcast sky, solitary figure walking in fog, muted desaturated color grade",
+          tags:"melancholy, isolation, rain, grey sky, alone, muted"}},
+  {main:"Sadness", sub:"Torment / Anguish",
+   music:{core:"Heavier cinematic grief and despair, mourning and devastation, dramatic and slow",
+          tags:"anguish, despair, cinematic grief, devastating, slow dramatic",
+          amGenre:"Drama", mtMood:"Dramatic", libKeyword:"grief"},
+   footage:{core:"Person collapsing to their knees in grief, hands covering face in despair, dark stormy skies overhead, anguished cry alone in the rain, devastated slow-motion reaction",
+          tags:"anguish, grief, despair, collapse, devastation, dark storm"}}
+];
+
+/* ---------- Reference-track parsing (music) -------------------------------- */
+function youtubeRefResult(id){
+  return {
+    platform:"YouTube", id,
+    primaryLabel:"Open Similar Tracks (Mix) →",
+    // Confirmed live: list=RD{videoId}&start_radio=1 loads YouTube's own
+    // auto-generated "Mix" for that track and starts playing immediately.
+    primaryUrl:`https://www.youtube.com/watch?v=${id}&list=RD${id}&start_radio=1`,
+    instructions:`Opens straight into YouTube's auto-generated "Mix" for this track — a similar-songs playlist that starts playing immediately.`
+  };
+}
+
+function parseReferenceUrl(raw){
+  let u;
+  try{ u = new URL(raw.trim()); } catch(e){ return null; }
+  const host = u.hostname.replace(/^www\./, "");
+  if(host === "open.spotify.com"){
+    const m = u.pathname.match(/\/track\/([A-Za-z0-9]+)/);
+    if(!m) return null;
+    return {
+      platform:"Spotify", id:m[1],
+      primaryLabel:"Open Track on Spotify →",
+      primaryUrl:`https://open.spotify.com/track/${m[1]}`,
+      instructions:`Spotify doesn't expose a link straight to "song radio" — once the track opens, click the "•••" menu → "Go to song radio" for a real 50-track playlist of similar songs.`
+    };
+  }
+  if(host === "youtu.be"){
+    const id = u.pathname.slice(1).split("/")[0];
+    return id ? youtubeRefResult(id) : null;
+  }
+  if(host === "youtube.com" || host === "music.youtube.com"){
+    let id = u.searchParams.get("v");
+    if(!id){
+      const m = u.pathname.match(/\/(shorts|embed)\/([A-Za-z0-9_-]{6,})/);
+      if(m) id = m[2];
+    }
+    return id ? youtubeRefResult(id) : null;
+  }
+  return null;
+}
+
+/* ---------- Claude deep links ----------------------------------------------
+   These are requests FOR Claude, not something this static page can answer
+   itself — they need a live model to research the reference. The claude://
+   link just gets the request typed up and ready to send. */
+const claudeLink = text => `claude://cowork/new?q=${encodeURIComponent(text)}`;
+
+const CLAUDE_PROMPTS = {
+  musicSearch: url => `Research this song and act as a music supervisor: ${url}\n\nBased on its genre, instrumentation, tempo, and mood, write me a stock-music-library search prompt I could use to find similar-sounding, licensable tracks. Give me two versions, formatted exactly like this:\n\nCore: [one descriptive sentence]\nTags: [comma-separated keyword list]`,
+  // Asks for real, well-known commercial songs instead of a stock-library
+  // search string. Spotify's public recommendations/audio-features API was
+  // shut down in Nov 2024, so asking Claude sidesteps that entirely.
+  similarSongs: url => `Act as a music supervisor. Here's a reference track: ${url}\n\nBased on its genre, era, instrumentation, tempo, and mood, name 8-10 real, well-known popular songs (not stock/production-library music) that have a similar feel. For each, give the artist, song title, and a one-line note on why it fits (genre/era/energy/theme).`,
+  footage: url => `Research this reference and act as a cinematographer sourcing stock footage: ${url}\n\nBased on its shot type, camera movement, lighting, composition, and mood, write me a stock-footage search prompt I could use to find similar shots. Give me two versions, formatted exactly like this:\n\nCore: [one descriptive sentence]\nTags: [comma-separated keyword list]`,
+  template: url => `Research this reference and act as a video editor sourcing templates: ${url}\n\nBased on its category (titles / opener / logo sting / broadcast package / etc.), visual style, and mood, write me an Envato Elements video-template search prompt I could use to find similar templates. Give me two versions, formatted exactly like this:\n\nCore: [one descriptive sentence]\nTags: [comma-separated keyword list]`
+};
+
+/* ---------- Tool: Cue Sheet (music) ---------------------------------------- */
+const MUSIC = {
+  id:"music", name:"Cue Sheet", kind:"Music",
+  tabPrefix:"musicsearch_",
+  emotionKey:"music",
+  variantOptions:[
+    ["core", `Natural language (best for APM / Megatrax / Extreme "Ask Me Anything")`],
+    ["tags", `Tag / keyword list (best for Extreme Music drill-down, Audiomachine)`]
+  ],
+  subtitle:"Pick a mood from your library or type your own prompt, then click straight through to a pre-filled search on each stock house.",
+  placeholder:"e.g. visceral industrial horror, grinding metallic percussion, screeching strings, mechanical and attack-oriented, slasher/creature-feature intensity",
+  promptLabel:"Search prompt (auto-filled — edit freely, or clear and write your own)",
+  chipGroups:[
+    {key:"genres", label:"Genre (optional — leave blank for the widest results)",
+     options:["Orchestral","Hybrid","Industrial","Electronic","Ambient","Indie / Alt-Rock","Trip-Hop / Downtempo","Gospel / Soul","Post-Classical"]},
+    {key:"instruments", label:"Instrumentation (optional — leave blank for the widest results)",
+     options:["Strings","Piano / Keys","Guitar","Percussion","Choir / Vocals","Synth / Electronic","Brass","Woodwinds"]}
+  ],
+  buildFinalQuery(base, chips){
+    if(!base) return "";
+    const parts = [base];
+    if(chips.genres.size > 0) parts.push([...chips.genres].join(", "));
+    if(chips.instruments.size > 0) parts.push(`featuring ${[...chips.instruments].join(", ")}`);
+    return parts.join(", ");
+  },
+  preview:(q) => q ? `Sending: <b>${esc(q)}</b>` : "",
+  badges:true,
+  platforms:[
+    {name:"Extreme Music", category:"stock",
+     build:q => `https://www.extrememusic.com/search?isAiSearch=true&query=${encodeURIComponent(q)}`,
+     note:"Uses Extreme's “Ask Me Anything” AI search mode (isAiSearch=true) so full descriptive prompts actually return results — their plain keyword box only does literal exact-phrase matches and returns nothing for anything longer than one word."},
+    {name:"APM Music", category:"stock",
+     build:q => `https://www.apmmusic.com/search?tab=tracks&prompt=${encodeURIComponent(q)}&tincl=${encodeURIComponent(q)}`,
+     note:"Deepest metadata filters of the group. Also has “Sonic Similarity” — drag in one of your own reference files instead of typing anything."},
+    {name:"Audiomachine", category:"stock",
+     // Audiomachine and Megatrax (both built on Cadenzabox) require every word
+     // in the query to match something, so multi-word prompts reliably return
+     // zero. Confirmed live: "tender" alone returns 49 well-matched tracks,
+     // "warm sincere gentle intimate sentimental" returns none.
+     build:(q, ctx) => { const e = ctx.emotion; return `https://search.audiomachine.com/tracks?tags=${encodeURIComponent("Catalog→Trailer Music")}${e && e.amGenre ? `&tags=${encodeURIComponent("Genre→"+e.amGenre)}` : ""}&q=${encodeURIComponent(e && e.libKeyword ? e.libKeyword : musicText.singleKeyword(q))}`; },
+     note:"Their search requires every word to match something, so multi-word prompts often return zero — this link uses a single keyword instead, pre-filtered to their “Trailer Music” catalog (excluding “Tools of the Trade,” their sound-design/FX catalog) so you get scored music, not one-off hits and risers. When you pick an emotion above, that keyword is a fixed, live-verified word for that emotion (not just the first word of whichever Natural-language/Tag-list text happens to be showing — that produced zero-result searches for a couple of emotions, since the first word of a descriptive sentence is often a throwaway adjective the catalog doesn't use). It also stacks on the matching Genre tag as a real narrowing filter, not free text. Once there, use the Genre/Keyword tag sidebar to layer on more. Best for Epic Battle, Heated Competition, and Enthrallment — you already reference their tracks directly in those folders."},
+    {name:"Getty Images Music", category:"stock",
+     build:q => `https://gettyimages.triplescoopmusic.com/search?b=${encodeURIComponent(q)}`,
+     note:"Powered by Triple Scoop. Mood-first playlist browsing; tracks are pre-cleared (“Safelisted”) for social use."},
+    {name:"Megatrax", category:"stock",
+     // Megatrax's Duration facet uses opaque internal codes for each bucket
+     // that don't cleanly round-trip through encodeURIComponent, so this is
+     // the exact query string confirmed live (clicking the "> 2 minutes"
+     // checkbox on-site) rather than something built from a plain label.
+     build:(q, ctx) => { const e = ctx.emotion; return `https://megatrax.com/tracks?q=${encodeURIComponent(e && e.libKeyword ? e.libKeyword : musicText.singleKeyword(q))}&tags=Duration%E2%86%92M%5D%20%20%3E%202%20minutes${e && e.mtMood ? `&tags=${encodeURIComponent("Moods→"+e.mtMood)}` : ""}`; },
+     note:"Runs on the same engine as Audiomachine and has the same issue — every word must match something, so multi-word prompts often return zero. This link uses a single keyword, plus a Duration filter (over 2 minutes) to screen out the one-off sound-design hits and risers that otherwise flood results — real cues are almost always longer than that. When you pick an emotion above, that keyword is a fixed, live-verified word for that emotion rather than derived from whichever Natural-language/Tag-list text happens to be showing. It also stacks on the matching Mood tag as a real narrowing filter (not free text). Once there, use the Moods/Genre filters to narrow further, or the “More Like This” tool once you find one good track."},
+    {name:"Spotify", category:"commercial",
+     build:q => `https://open.spotify.com/search/${encodeURIComponent(q)}`,
+     // Spotify's "Genres & Moods" browse mode matches short canonical labels,
+     // not sentences — moodPhrase keeps every substantive word and drops
+     // filler. Confirmed live: "Warm sincere, gentle mid tempo, intimate
+     // sentimental" surfaces real curated playlists; the raw sentence doesn't.
+     build2:q => `https://open.spotify.com/search/${encodeURIComponent(musicText.moodPhrase(q))}/genres`,
+     label2:"Browse Moods & Genres →",
+     note:"The main link is a plain text search — it's really matching titles/lyrics/artists/playlists, not true mood intelligence, so quality varies a lot by emotion. “Browse Moods & Genres” opens Spotify's own curated mood/genre category browser instead, which surfaces real editorial playlists (e.g. “Setting a romantic atmosphere,” “Intimacy,” “Romantic jazz”) — much better for needle-drop discovery on love/sadness/happiness-type moods. It comes up empty for moods mainstream music rarely covers, like Horror or Epic Battle — that's a real gap in Spotify's catalog, not a broken link. Already have one reference song you like? Type its title/artist into the prompt box above instead of a mood, search here, open the track, then click the “•••” menu → “Go to song radio” — Spotify builds a real 50-track playlist of similar songs on the spot (confirmed live: Fleetwood Mac's “Songbird” → R.E.M., Rolling Stones, Mazzy Star, etc.). There's no direct link for that step; Spotify doesn't expose a URL shortcut for it, so it takes those two extra clicks once you're on the track page. Either way, anything you pick still needs to be cleared with the label/publisher — nothing here is pre-licensed for sync."}
+  ],
+  ref:{
+    label:"Or start from a reference track you already like (Spotify or YouTube link)",
+    placeholder:"e.g. https://open.spotify.com/track/... or https://www.youtube.com/watch?v=...",
+    findSimilar:true,
+    claudeLinks:[
+      {label:"Generate Search Prompt in Claude →", build:CLAUDE_PROMPTS.musicSearch},
+      {label:"Find Similar Popular Songs in Claude →", build:CLAUDE_PROMPTS.similarSongs}
+    ],
+    note:`This doesn't analyze the actual audio — I won't download or fingerprint copyrighted streaming content. It just deep-links you into each platform's own "more like this" engine: YouTube's auto-generated Mix opens immediately playing similar tracks; Spotify's "song radio" is one click away once the track page opens (Spotify doesn't expose a direct link for that step — and Spotify shut down the public recommendations/audio-features API in late 2024, so no tool, including this one, can pull real algorithmic similarity from them anymore).<br><br>
+      "Generate Search Prompt in Claude" opens Claude Desktop with a research request pre-filled (it needs to actually look up the song — that can't run inside this page). Review it, hit send, and paste the Core/Tags text Claude gives you back into the prompt box above.<br><br>
+      "Find Similar Popular Songs in Claude" is a different ask: instead of a stock-library search prompt, it has Claude name actual well-known songs (real commercial tracks, not production-library cues) that share the reference's genre/era/energy/mood — the same kind of research used for cover-song digging. Useful for needle-drop reference or just building a mood board of real songs to pitch.`
+  },
+  bottomNote:`Budget note: none of these platforms publish per-track pricing on the search page itself — pricing is quote or blanket-license based. Budget mainly determines which platform/license tier to prioritize, not the search text.<br><br>
+    Licensing note: the <b>Stock Library</b> cards are pre-cleared/blanket-license production music. The <b>Popular / Commercial</b> card (Spotify) surfaces real commercial songs for needle-drop reference only — anything you pick there still needs direct sync licensing with the label/publisher.`,
+  footer:`Generated from your "Music by Emotion" library. Links open each platform's own search — nothing is scraped or auto-purchased.`
+};
+
+/* ---------- Tool: Second Unit (stock footage) ------------------------------ */
+function artgridQuery(q){
+  // Artgrid's search box submits one repeated "search=" param per word rather
+  // than a single query string — confirmed live. Multi-word prompts work well
+  // in this format (unlike Storyblocks/Pond5).
+  return footageText.allMeaningfulWords(q).map(w => `search=${encodeURIComponent(w)}`).join("&");
+}
+
+const STOCK = {
+  id:"stock", name:"Second Unit", kind:"Stock Footage",
+  tabPrefix:"stockfootage_",
+  emotionKey:"footage",
+  variantOptions:[
+    ["core", "Natural language (best for Shutterstock / Getty / iStock / Filmsupply)"],
+    ["tags", "Tag / keyword list (best for Storyblocks / Pond5 / Artgrid)"]
+  ],
+  subtitle:"Pick a mood from your library or type your own prompt (or just describe the shot you need), then click straight through to a pre-filled search on each footage house.",
+  placeholder:"e.g. family having a picnic at the park, golden hour sunlight, laughing kids, wide shot",
+  promptLabel:"Search prompt (auto-filled — edit freely, or clear and write your own)",
+  chipGroups:[
+    {key:"shots", label:"Shot type (optional — leave blank for the widest results)",
+     options:["Aerial / Drone","Close-up","Wide / Establishing","Slow Motion","Time-lapse","Handheld","POV"]}
+  ],
+  buildFinalQuery(base, chips){
+    if(!base) return "";
+    const parts = [base];
+    if(chips.shots.size > 0) parts.push([...chips.shots].join(", "));
+    return parts.join(", ");
+  },
+  preview:(q) => q ? `Sending: <b>${esc(q)}</b>` : "",
+  afterInputsNote:`Heads up: stock footage is usually searched by literal shot content ("family at the park having a picnic") rather than mood, unlike music. The emotion prompts are a starting point to see what comes back — for most jobs you'll get better mileage typing a plain content description directly into the box above.`,
+  platforms:[
+    {name:"Shutterstock",
+     build:q => `https://www.shutterstock.com/video/search/${encodeURIComponent(q)}`,
+     note:"Real relevance-based search — handles full descriptive prompts well, commas and all. Has its own AI Search mode on-site if you want to try natural-language phrasing beyond what's pre-filled here."},
+    {name:"Getty Images",
+     build:q => `https://www.gettyimages.com/search/2/film?family=creative&phrase=${encodeURIComponent(q)}`,
+     note:"Creative (royalty-free) video search. Handles full descriptive prompts fine — confirmed live with a 5-part mood sentence returning thousands of well-matched results."},
+    {name:"iStock",
+     build:q => `https://www.istockphoto.com/search/2/film?phrase=${encodeURIComponent(q)}`,
+     note:"Same Getty Images family/engine, generally lower-cost tier. Also handles full descriptive prompts well."},
+    {name:"Storyblocks",
+     // Storyblocks and Pond5 do exact-phrase/AND-style matching — confirmed
+     // live: Pond5 0 results for a full sentence vs 3,496 for "unsettling";
+     // Storyblocks 12 vs 255 for the same pair.
+     build:q => `https://www.storyblocks.com/video/search/${encodeURIComponent(footageText.singleKeyword(q))}`,
+     note:"Their search treats the whole query as one exact phrase, so multi-word prompts return almost nothing — confirmed live (12 results for a full sentence vs. 255 for one keyword). This link uses a single keyword instead; narrow further with their on-site filters once you're there."},
+    {name:"Pond5",
+     build:q => `https://www.pond5.com/search?kw=${encodeURIComponent(footageText.singleKeyword(q))}&media=footage`,
+     note:"Same issue as Storyblocks, more extreme — confirmed live a full descriptive sentence returned zero results, while a single keyword returned 3,496. This link uses a single keyword; use the sidebar filters on-site to layer mood/color/pace back in."},
+    {name:"Artgrid",
+     build:q => `https://artgrid.io/?${artgridQuery(q)}&sortId=1`,
+     note:"Confirmed live: Artgrid's own search box submits one repeated URL parameter per word rather than a single string, and it handles multi-word prompts well in that format — this link replicates that exactly. Subscription-only catalog (“Get Unlimited Stock Footage”), so you'll need to be signed in to see full results."},
+    {name:"Filmsupply",
+     build:q => `https://www.filmsupply.com/clips?editorial=0&page=1&search=${encodeURIComponent(q)}`,
+     note:"Premium cinematic footage, sister site to Musicbed. Handles full descriptive prompts well — confirmed live returning thousands of genuinely on-mood, high-end results. Also has its own Mood/Theme filter sidebar once you're there."},
+    {name:"Frameset",
+     build:q => `https://frameset.app/search?search=${encodeURIComponent(q)}`,
+     note:"Different animal from the rest of this list — not a licensable stock library, it's a visual-reference search engine over real commercials, music videos, and films (\"Search commercials, music videos, short films, and more\"). Great for pulling a shot-reference/mood board before you brief an editor or DP, but anything you like still needs to be sourced/licensed separately — you're not getting a clean master here. Handles full descriptive prompts well — confirmed live with the picnic-in-the-park prompt returning genuinely on-mood golden-hour family shots. Heads up: the free tier caps you at a small number of searches (10 to start) before it asks you to log in or upgrade, so it's not built for repeated \"Search All\" runs the way the others are."}
+  ],
+  ref:{
+    label:"Or start from a reference clip you already like",
+    placeholder:"e.g. a link to a shot/clip you like — Vimeo, YouTube, a stock footage page, etc.",
+    findSimilar:false,
+    claudeLinks:[{label:"Generate Search Prompt in Claude →", build:CLAUDE_PROMPTS.footage}],
+    note:`This can't actually open/analyze the link itself — that needs a live model, not client-side code in this page. Clicking through opens Claude Desktop with a research request pre-filled (look at the reference, work out its shot type/style/lighting/mood, write a stock-footage search prompt). Review it, hit send, and paste what comes back into the prompt box above.<br><br>
+      Have an actual video file instead of a link? Skip this field — upload the file directly in your chat with Claude. Claude can pull frames from it with ffmpeg, look at the visual style directly (composition, lighting, color, camera movement), and hand you a ready-made Core/Tags prompt to paste into the box above. That's a stronger signal than a link, since Claude is looking at the actual footage rather than researching it secondhand.`
+  },
+  footer:`Generated from your "Music by Emotion" library's taxonomy, adapted for footage. Links open each platform's own search — nothing is scraped or auto-purchased.`
+};
+
+/* ---------- Tool: Take One (templates) ------------------------------------- */
+// Motion Array's own search box splits a comma-separated query into tag chips
+// and ANDs them together — confirmed live: 2 tags returned 16 pages, 3 tags 9
+// pages, 6 tags returned nothing. A long sentence with no commas returns zero.
+// Capping at 3 tags is the sweet spot.
+function motionArrayKeywords(q){
+  const chunks = q.split(",").map(c => c.trim()).filter(Boolean);
+  const words = chunks.length > 1 ? chunks.map(templateText.firstWordOf) : templateText.meaningfulWords(q);
+  return [...new Set(words.filter(Boolean))].slice(0, 3).join(", ");
+}
+
+// Motion Array's per-application template pages, confirmed live (each supports
+// its own ?q= search). No Apple Motion page exists there.
+const motionArrayAppSlug = {
+  "After Effects":"after-effects-templates",
+  "Premiere Pro":"premiere-pro-templates",
+  "Final Cut Pro":"final-cut-pro-templates",
+  "DaVinci Resolve":"davinci-resolve-templates"
+};
+
+const TEMPLATES = {
+  id:"templates", name:"Take One", kind:"Templates",
+  tabPrefix:"templatetools_",
+  emotionKey:null,
+  subtitle:"Type a prompt (or hand Claude a reference video/link to analyze first), narrow by template type / editing app, then click straight through to a pre-filled search on each marketplace.",
+  placeholder:"e.g. epic cinematic trailer titles, bold dramatic dark heroic energy",
+  promptLabel:"Search prompt",
+  chipGroups:[
+    // Real values confirmed live on Envato's Video Templates filters.
+    {key:"categories", label:"Template type (optional — leave blank for the widest results)",
+     options:["Broadcast Packages","Elements","Infographics","Logo Stings","LUT Packs","Openers","Product Promo","Titles","Video Displays"]},
+    {key:"apps", label:"Editing app (optional — leave blank for the widest results)",
+     options:["After Effects","Premiere Pro","Apple Motion","Final Cut Pro","DaVinci Resolve"]}
+  ],
+  buildFinalQuery:(base) => base,
+  preview(q, chips){
+    if(!q) return "";
+    const parts = [q];
+    if(chips.categories.size) parts.push(`categories: ${[...chips.categories].join(", ")}`);
+    if(chips.apps.size) parts.push(`apps: ${[...chips.apps].join(", ")}`);
+    return `Sending: <b>${esc(parts.join(" | "))}</b>`;
+  },
+  platforms:[
+    {name:"Envato Elements",
+     build:(q, ctx) => {
+       let url = `https://app.envato.com/search?itemType=video-templates&term=${encodeURIComponent(q)}`;
+       ctx.categories.forEach(c => url += `&filter.categories=${encodeURIComponent(c)}`);
+       ctx.apps.forEach(a => url += `&filter.applications_supported=${encodeURIComponent(a)}`);
+       return url;
+     },
+     note:"Confirmed live: handles full descriptive prompts well (commas and all), no single-keyword workaround needed like Motion Array/Storyblocks — a 6-word mood prompt returned genuinely on-mood, well-matched title templates. Template type and editing app narrow the results as real filters, not free text. Once there, the Styles/Theme/Events filters can layer on more."},
+    {name:"Motion Array",
+     build:(q, ctx) => {
+       const kw = motionArrayKeywords(q);
+       const matchedApps = ctx.apps.filter(a => motionArrayAppSlug[a]);
+       if(matchedApps.length === 1){
+         return `https://motionarray.com/${motionArrayAppSlug[matchedApps[0]]}/?q=${encodeURIComponent(kw)}`;
+       }
+       return `https://motionarray.com/browse/search/${encodeURIComponent(kw)}/?category=templates`;
+     },
+     note:"Full descriptive sentences return zero here (exact-phrase match fails), but — like Audiomachine's Genre/Keyword tags — Motion Array's own search box splits a comma-separated query into individual tag chips and ANDs them together. This link takes up to 3 short keywords from your prompt and stacks them the same way, confirmed live to return genuinely on-mood results (well beyond just one bare word) without over-narrowing to zero. Picking exactly one editing app (After Effects, Premiere Pro, Final Cut Pro, or DaVinci Resolve — confirmed live) switches to that app's own template listing; picking none or more than one falls back to Motion Array's combined cross-software search. Template type chips above are Envato's own category list and don't carry over here — Motion Array's category filter didn't expose a clean shareable URL when tested live, so it's left for on-site narrowing once you're there."}
+  ],
+  ref:{
+    label:"Or start from a template/asset link you already like",
+    placeholder:"e.g. a link to an Envato item, or any other reference clip/template",
+    findSimilar:false,
+    claudeLinks:[{label:"Generate Search Prompt in Claude →", build:CLAUDE_PROMPTS.template}],
+    note:`This can't actually open/analyze the link itself — that needs a live model, not client-side code in this page. Clicking through opens Claude Desktop with a research request pre-filled (look at the reference, work out its style/category/mood, write an Envato-style search prompt). Review it, hit send, and paste what comes back into the prompt box above.<br><br>
+      Have an actual video file instead of a link? Skip this field — upload the file directly in your chat with Claude. Claude can pull frames from it with ffmpeg, look at the visual style directly, and hand you a ready-made Core/Tags prompt to paste into the box above. That's a stronger signal than a link, since Claude is looking at the actual footage rather than researching it secondhand.`
+  },
+  footer:`Links open each marketplace's own search — nothing is scraped or auto-purchased. More marketplaces (MotionElements, etc.) can be added the same way.`
+};
+
+const TOOLS = [MUSIC, STOCK, TEMPLATES];
+
+/* ---------- tabName --------------------------------------------------------
+   A stable per-platform window name (instead of "_blank") means a repeat
+   search navigates the SAME already-open tab for that platform rather than
+   piling up a new one. Deliberately NOT using rel="noopener" — noopener puts
+   the new tab in an unrelated browsing-context group, which breaks the
+   name-matching (confirmed live: with noopener every click opened a new tab). */
+const tabName = (tool, name) => tool.tabPrefix + name.replace(/[^a-zA-Z0-9]/g, "_");
+
+/* ---------- Build each tool's UI ------------------------------------------- */
+const tabsEl = document.getElementById('tabs');
+const toolsEl = document.getElementById('tools');
+
+function buildTool(tool){
+  const id = s => `${tool.id}-${s}`;
+  const section = document.createElement('section');
+  section.className = 'tool';
+  section.id = id('panel');
+  section.setAttribute('role', 'tabpanel');
+
+  const emotionBlock = tool.emotionKey ? `
+    <div class="row">
+      <div>
+        <label for="${id('emotion')}">Your emotion library</label>
+        <select id="${id('emotion')}"><option value="">— Custom prompt only —</option>
+          ${EMOTIONS.map((e, i) => `<option value="${i}">${esc(e.main)} — ${esc(e.sub)}</option>`).join("")}
+        </select>
+      </div>
+      <div>
+        <label for="${id('variant')}">Prompt style</label>
+        <select id="${id('variant')}">
+          ${tool.variantOptions.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("")}
+        </select>
+      </div>
+    </div>` : "";
+
+  const chipBlocks = tool.chipGroups.map((g, gi) => `
+    <div style="margin-top:${gi === 0 ? 18 : 14}px;">
+      <label>${esc(g.label)}</label>
+      <div class="chips" data-group="${g.key}">
+        ${g.options.map(o => `<button type="button" class="chip" data-value="${esc(o)}" aria-pressed="false">${esc(o)}</button>`).join("")}
+      </div>
+    </div>`).join("");
+
+  const r = tool.ref;
+  const primaryAction = r.findSimilar
+    ? `<button id="${id('refBtn')}" type="button" class="accent2Btn">Find Similar Tracks &rarr;</button>`
+    : `<a id="${id('claude0')}" href="#" class="accent2Btn disabled">${esc(r.claudeLinks[0].label)}</a>`;
+  const secondaryLinks = r.findSimilar
+    ? `<div class="row" style="margin-top:10px; gap:10px;">
+        ${r.claudeLinks.map((c, i) => `<a id="${id('claude' + i)}" href="#" class="accent2Btn disabled">${esc(c.label)}</a>`).join("")}
+      </div>` : "";
+
+  section.innerHTML = `
+    <p class="subtitle">${esc(tool.subtitle)}</p>
+    <div class="panel">
+      ${emotionBlock}
+      <div style="margin-top:${tool.emotionKey ? 16 : 0}px;">
+        <label for="${id('prompt')}">${esc(tool.promptLabel)}</label>
+        <textarea id="${id('prompt')}" placeholder="${esc(tool.placeholder)}"></textarea>
+      </div>
+      <div class="tags" id="${id('refInfo')}"></div>
+      ${chipBlocks}
+      <div class="finalQuery" id="${id('preview')}"></div>
+    </div>
+    ${tool.afterInputsNote ? `<div class="note" style="margin:-6px 0 20px;">${tool.afterInputsNote}</div>` : ""}
+    <div class="panel">
+      <label for="${id('refUrl')}">${esc(r.label)}</label>
+      <div class="row" style="align-items:flex-end;">
+        <div style="flex:3;"><input type="text" id="${id('refUrl')}" placeholder="${esc(r.placeholder)}"></div>
+        <div style="flex:0 0 auto; min-width:0;">${primaryAction}</div>
+      </div>
+      ${r.findSimilar ? `<div id="${id('refResult')}" class="tags"></div>` : ""}
+      ${secondaryLinks}
+      <div class="note" style="margin-top:14px;">${r.note}</div>
+    </div>
+
+    <div class="divider">Search this prompt on</div>
+    <div class="searchAllRow"><button id="${id('searchAll')}" type="button" class="searchAllBtn">Search All &rarr;</button></div>
+    <div class="popupHint">Browsers typically only allow the first tab to open on the first click. If that happens: click the blocked-pop-ups icon in your address bar → "Always allow pop-ups from this site" → click Search All again.</div>
+    <div class="popupBlockedMsg" id="${id('blocked')}"></div>
+    <div class="platforms" id="${id('cards')}"></div>
+    ${tool.bottomNote ? `<div class="note" style="margin-top:20px;">${tool.bottomNote}</div>` : ""}
+    <div class="footer">${esc(tool.footer)}</div>
+  `;
+  toolsEl.appendChild(section);
+
+  const $ = s => document.getElementById(id(s));
+  const el = {
+    emotion:$('emotion'), variant:$('variant'), prompt:$('prompt'), refInfo:$('refInfo'),
+    preview:$('preview'), refUrl:$('refUrl'), refBtn:$('refBtn'), refResult:$('refResult'),
+    searchAll:$('searchAll'), blocked:$('blocked'), cards:$('cards'),
+    claude:r.claudeLinks.map((_, i) => $('claude' + i))
+  };
+  const chips = {};
+  tool.chipGroups.forEach(g => chips[g.key] = new Set());
+
+  const state = {tool, el, chips};
+
+  function currentEmotion(){
+    if(!tool.emotionKey) return null;
+    const v = el.emotion.value;
+    return v === "" ? null : EMOTIONS[parseInt(v, 10)];
+  }
+
+  // Audiomachine/Megatrax use a curated keyword tied to the selected emotion.
+  // If you've typed over the auto-filled prompt, that keyword goes stale, so
+  // fall back to deriving it from the live prompt text like the other
+  // platforms do. Confirmed live: without this, editing the prompt left those
+  // two platforms searching the old emotion's word.
+  function effectiveEmotion(){
+    const e = currentEmotion();
+    if(!e) return null;
+    const p = e[tool.emotionKey];
+    const val = el.prompt.value.trim();
+    return (val === p.core.trim() || val === p.tags.trim()) ? p : null;
+  }
+
+  function context(){
+    const ctx = {emotion:effectiveEmotion()};
+    tool.chipGroups.forEach(g => ctx[g.key] = [...chips[g.key]]);
+    return ctx;
+  }
+
+  function finalQuery(){ return tool.buildFinalQuery(el.prompt.value.trim(), chips); }
+
+  function renderCards(){
+    const q = finalQuery();
+    const ctx = context();
+    el.cards.innerHTML = "";
+    tool.platforms.forEach(p => {
+      const url = q ? p.build(q, ctx) : null;
+      const url2 = (q && p.build2) ? p.build2(q, ctx) : null;
+      const badge = !tool.badges ? "" : (p.category === "commercial"
+        ? `<span class="badge commercial">Popular / needs licensing</span>`
+        : `<span class="badge">Stock library</span>`);
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.platform = p.name;
+      card.innerHTML = `
+        <h3>${esc(p.name)}${badge}</h3>
+        <p>${p.note}</p>
+        <a class="primary${url ? '' : ' disabled'}" href="${url ? esc(url) : '#'}" target="${tabName(tool, p.name)}">Search on ${esc(p.name)} &rarr;</a>
+        ${p.build2 ? `<a class="secondary${url2 ? '' : ' disabled'}" href="${url2 ? esc(url2) : '#'}" target="${tabName(tool, p.name + '_alt')}">${esc(p.label2)}</a>` : ''}
+      `;
+      el.cards.appendChild(card);
+    });
+    el.searchAll.disabled = !q;
+    el.blocked.style.display = "none";
+    el.preview.innerHTML = tool.preview(q, chips);
+  }
+
+  function fillPromptFromSelection(){
+    const e = currentEmotion();
+    if(!e){ el.refInfo.innerHTML = ""; renderCards(); return; }
+    const p = e[tool.emotionKey];
+    el.prompt.value = el.variant.value === "tags" ? p.tags : p.core;
+    el.refInfo.innerHTML = `<b>${esc(e.main)} → ${esc(e.sub)}</b><br>Core: ${esc(p.core)}<br>Tags: ${esc(p.tags)}`;
+    renderCards();
+  }
+
+  // True when the prompt box is empty or still holds an auto-filled emotion
+  // prompt (i.e. the user hasn't typed their own) — safe to overwrite.
+  function promptUntouched(){
+    const val = el.prompt.value.trim();
+    if(!val) return true;
+    return EMOTIONS.some(e => { const p = e[tool.emotionKey]; return val === p.core.trim() || val === p.tags.trim(); });
+  }
+
+  function searchAll(){
+    const q = finalQuery();
+    if(!q) return;
+    const ctx = context();
+    let opened = 0, blocked = 0;
+    const list = tool.platforms;
+    list.forEach((p, i) => {
+      // Slight stagger: browsers are more willing to honor a run of
+      // window.open calls spread across a few ticks than a tight loop.
+      setTimeout(() => {
+        const win = openExternal(p.build(q, ctx), tabName(tool, p.name));
+        if(win){ opened++; } else { blocked++; }
+        if(i === list.length - 1){
+          setTimeout(() => {
+            if(blocked > 0){
+              el.blocked.textContent = `Only ${opened} of ${list.length} tabs opened — ${blocked} blocked by your browser. Click the blocked-pop-ups icon in the address bar → "Always allow pop-ups from this site", then click Search All again.`;
+              el.blocked.style.display = "block";
+            } else {
+              el.blocked.style.display = "none";
+            }
+          }, 200);
+        }
+      }, i * 120);
+    });
+  }
+
+  function updateClaudeLinks(){
+    const raw = el.refUrl.value.trim();
+    r.claudeLinks.forEach((c, i) => {
+      const a = el.claude[i];
+      a.href = raw ? claudeLink(c.build(raw)) : "#";
+      a.classList.toggle('disabled', !raw);
+    });
+  }
+
+  function renderRefResult(){
+    const raw = el.refUrl.value.trim();
+    updateClaudeLinks();
+    if(!raw){ el.refResult.innerHTML = ""; return; }
+    const result = parseReferenceUrl(raw);
+    if(!result){
+      el.refResult.innerHTML = `<span style="color:var(--accent);">Couldn't recognize that link — paste a Spotify track URL (open.spotify.com/track/...) or a YouTube video URL (youtube.com/watch?v=... or youtu.be/...).</span>`;
+      return;
+    }
+    el.refResult.innerHTML = `
+      <b>${result.platform} track detected.</b><br>
+      ${esc(result.instructions)}<br>
+      <a href="${esc(result.primaryUrl)}" target="_blank" rel="noopener"
+         style="display:inline-block; margin-top:8px; background:var(--accent2); color:#fff; text-decoration:none; padding:8px 14px; border-radius:6px; font-size:13px; font-weight:bold;">
+        ${esc(result.primaryLabel)}
+      </a>`;
+  }
+
+  // Wire up
+  section.querySelectorAll('.chips').forEach(group => {
+    const set = chips[group.dataset.group];
+    group.addEventListener('click', ev => {
+      const chip = ev.target.closest('.chip');
+      if(!chip) return;
+      const v = chip.dataset.value;
+      if(set.has(v)){ set.delete(v); } else { set.add(v); }
+      chip.classList.toggle('active', set.has(v));
+      chip.setAttribute('aria-pressed', set.has(v));
+      renderCards();
+    });
+  });
+  if(tool.emotionKey){
+    el.emotion.addEventListener('change', () => { fillPromptFromSelection(); syncEmotion(tool, el.emotion.value); });
+    el.variant.addEventListener('change', fillPromptFromSelection);
+  }
+  el.prompt.addEventListener('input', renderCards);
+  el.searchAll.addEventListener('click', searchAll);
+  el.refUrl.addEventListener('input', updateClaudeLinks);
+  if(r.findSimilar){
+    el.refBtn.addEventListener('click', renderRefResult);
+    el.refUrl.addEventListener('keydown', ev => { if(ev.key === 'Enter'){ ev.preventDefault(); renderRefResult(); } });
+  } else {
+    el.refUrl.addEventListener('keydown', ev => { if(ev.key === 'Enter') ev.preventDefault(); });
+  }
+
+  // Tab button
+  const tab = document.createElement('button');
+  tab.type = 'button';
+  tab.className = 'tab';
+  tab.id = id('tab');
+  tab.setAttribute('role', 'tab');
+  tab.setAttribute('aria-controls', section.id);
+  tab.innerHTML = `${esc(tool.name)}<small>${esc(tool.kind)}</small>`;
+  tab.addEventListener('click', () => showTool(tool.id));
+  tabsEl.appendChild(tab);
+
+  Object.assign(state, {section, tab, renderCards, fillPromptFromSelection, promptUntouched});
+  renderCards();
+  return state;
+}
+
+const STATES = {};
+TOOLS.forEach(t => STATES[t.id] = buildTool(t));
+
+/* ---------- Shared emotion between Music and Stock --------------------------
+   Picking an emotion on one tab carries it to the other, as long as the other
+   tab's prompt is empty or still auto-filled (never overwrites your own text). */
+function syncEmotion(fromTool, value){
+  if(value === "") return;
+  TOOLS.filter(t => t.emotionKey && t !== fromTool).forEach(t => {
+    const s = STATES[t.id];
+    if(s.el.emotion.value === value || !s.promptUntouched()) return;
+    s.el.emotion.value = value;
+    s.fillPromptFromSelection();
+  });
+}
+
+/* ---------- Tab switching (remembers last tab; supports #music etc.) ------- */
+function showTool(toolId, fromHash){
+  if(!STATES[toolId]) toolId = TOOLS[0].id;
+  TOOLS.forEach(t => {
+    const s = STATES[t.id];
+    const on = t.id === toolId;
+    s.section.hidden = !on;
+    s.tab.setAttribute('aria-selected', on);
+    s.tab.tabIndex = on ? 0 : -1;
+  });
+  const t = TOOLS.find(t => t.id === toolId);
+  document.title = `${t.name} — STN Search Suite`;
+  try{ localStorage.setItem('stn-suite-tab', toolId); } catch(e){}
+  if(!fromHash && location.hash.slice(1) !== toolId){
+    try{ history.replaceState(null, "", "#" + toolId); } catch(e){}
+  }
+}
+
+tabsEl.addEventListener('keydown', ev => {
+  if(ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+  const ids = TOOLS.map(t => t.id);
+  const cur = ids.findIndex(i => STATES[i].tab.getAttribute('aria-selected') === 'true');
+  const next = ids[(cur + (ev.key === 'ArrowRight' ? 1 : ids.length - 1)) % ids.length];
+  showTool(next);
+  STATES[next].tab.focus();
+});
+
+window.addEventListener('hashchange', () => showTool(location.hash.slice(1), true));
+
+(function initTab(){
+  let start = location.hash.slice(1);
+  if(!STATES[start]){
+    try{ start = localStorage.getItem('stn-suite-tab') || ""; } catch(e){ start = ""; }
+  }
+  showTool(STATES[start] ? start : TOOLS[0].id);
+})();
+
+/* ---------- Installable app (only when served from a real web address) -----
+   The service worker lets the hosted version be installed as its own app
+   window and keep working offline. Skipped when opened as a local file or
+   inside the Premiere panel. */
+if('serviceWorker' in navigator && location.protocol.startsWith('http') && !IN_PREMIERE){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
