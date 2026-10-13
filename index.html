@@ -178,8 +178,10 @@ if(FRAMED){
 }
 
 function openExternal(url, name){
-  if(IN_PREMIERE){ window.cep.util.openURLInDefaultBrowser(url); return true; }
+  // Inside the panel, always hand links to the panel: it knows how to open
+  // claude:// links (CEP's own opener only handles web addresses).
   if(HOST_BRIDGE){ window.parent.postMessage({type:'stn-open', url}, '*'); return true; }
+  if(IN_PREMIERE){ window.cep.util.openURLInDefaultBrowser(url); return true; }
   return window.open(url, name);
 }
 
