@@ -385,8 +385,11 @@ function parseReferenceUrl(raw){
 /* ---------- Claude deep links ----------------------------------------------
    These are requests FOR Claude, not something this static page can answer
    itself — they need a live model to research the reference. The claude://
-   link just gets the request typed up and ready to send. */
-const claudeLink = text => `claude://cowork/new?q=${encodeURIComponent(text)}`;
+   link just gets the request typed up and ready to send.
+   Uses Claude Desktop's general "new chat" link (claude://claude.ai/new?q=),
+   which prefills the prompt for review — nothing is sent automatically.
+   (The older claude://cowork/new link did nothing on current app versions.) */
+const claudeLink = text => `claude://claude.ai/new?q=${encodeURIComponent(text)}`;
 
 const CLAUDE_PROMPTS = {
   musicSearch: url => `Research this song and act as a music supervisor: ${url}\n\nBased on its genre, instrumentation, tempo, and mood, write me a stock-music-library search prompt I could use to find similar-sounding, licensable tracks. Give me two versions, formatted exactly like this:\n\nCore: [one descriptive sentence]\nTags: [comma-separated keyword list]`,
